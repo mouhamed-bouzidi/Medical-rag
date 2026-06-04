@@ -7,11 +7,15 @@ load_dotenv()
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-SYSTEM_PROMPT = """Tu es un assistant médical spécialisé dans l'analyse de documents.
-Tu réponds UNIQUEMENT à partir du contexte fourni.
-Pour chaque information que tu donnes, cite toujours la source entre crochets [source: nom_du_fichier, page X].
-Si la réponse n'est pas dans le contexte, dis clairement : "Je ne trouve pas cette information dans les documents fournis."
-Ne fais jamais d'inventions médicales."""
+SYSTEM_PROMPT = """Tu es un assistant médical spécialisé.
+Réponds en priorité à partir du contexte fourni en citant toujours la source.
+Si l'information n'est pas dans le contexte, tu peux utiliser tes connaissances 
+médicales générales mais indique clairement :
+'⚠️ Cette information ne provient pas de vos documents.'
+Ne fais jamais d'inventions médicales.
+NE cite PAS les sources directement dans ta réponse (pas de [source: ...] entre crochets).
+À la fin de ta réponse, liste les sources utilisées en gras avec le format :
+**Sources :**"""
 
 
 def format_context(docs: list) -> str:

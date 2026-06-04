@@ -26,7 +26,7 @@ with st.sidebar:
         os.makedirs("data", exist_ok=True)
     for f in uploaded_files:
         dest = f"data/{f.name}"
-        if not os.path.exists(dest):  # n'écrase pas si déjà présent
+        if not os.path.exists(dest):  
             with open(dest, "wb") as out:
                 out.write(f.read())
     st.success(f"{len(uploaded_files)} fichier(s) uploadé(s)")
@@ -51,12 +51,10 @@ if "messages" not in st.session_state:
 # Afficher l'historique
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
-        if msg["role"] == "assistant" and "sources" in msg:
-            with st.expander("📚 Sources utilisées"):
-                for s in msg["sources"]:
-                    st.markdown(f"**{s['fichier']}** — page {s['page']}")
-                    st.caption(s["extrait"])
+        content = msg["content"]
+        if msg["role"] == "assistant":
+            content += " **AI**"
+        st.markdown(content)
 
 # --- Input utilisateur ---
 question = st.chat_input("Posez votre question médicale...")
@@ -71,12 +69,21 @@ if question:
     with st.chat_message("assistant"):
         with st.spinner("Recherche dans les documents..."):
             try:
-                result = ask(question)
-                st.markdown(result["answer"])
-                with st.expander("📚 Sources utilisées"):
+                result = ask(question, history=st.session_state.messages)
+                # Afficher la réponse sans sources inline
+                answer_text = result["answer"]
+                # Récupérer les sources et les afficher à la fin en gras
+                if result['sources']:
+                    sources_text = "\n\n**Sources :**"
                     for s in result['sources']:
-                        st.markdown(f"**{s['fichier']}** — page {s['page']}")
-                        st.caption(s["extrait"])
+                        sources_text += f"\n- **{s['fichier']} (page {s['page']})**"
+                    answer_text += sources_text
+                st.markdown(answer_text + " **AI**")
+                # Sauvegarder dans l'historique
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": answer_text + " **AI**"
+                })
 
             except Exception as e:
                 st.error(f"Erreur : {str(e)}")
